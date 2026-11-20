@@ -299,5 +299,10 @@ Error generating stack: `+e.message+`
   };
   const observer = new MutationObserver(mount);
   observer.observe(document.documentElement, { childList: true, subtree: true });
-  mount();
+  const finishMount = () => window.setTimeout(() => {
+    mount();
+    observer.disconnect();
+  }, 180);
+  if (document.readyState === 'complete') finishMount();
+  else window.addEventListener('load', finishMount, { once: true });
 })()`,g=d.replace(`</head>`,`<style>${f}</style></head>`).replace(`</body>`,`<script>${h}<\/script></body>`);function _(){return(0,m.jsx)(`main`,{className:`fixed inset-0 bg-[#020d1d]`,children:(0,m.jsx)(`iframe`,{title:`Karl Mendoza portfolio design`,srcDoc:g,sandbox:`allow-scripts allow-forms allow-popups`,referrerPolicy:`no-referrer`,className:`h-full w-full border-0`})})}(0,u.createRoot)(document.getElementById(`root`)).render((0,m.jsx)(l.StrictMode,{children:(0,m.jsx)(_,{})}));
