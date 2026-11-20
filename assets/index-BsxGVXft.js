@@ -52,6 +52,146 @@ Error generating stack: `+e.message+`
   z-index: 1;\r
 }\r
 \r
+#top.asd-hero > .asd-map-layer {\r
+  position: absolute;\r
+  z-index: 0;\r
+  inset: 0;\r
+  overflow: hidden;\r
+  pointer-events: none;\r
+}\r
+\r
+#top.asd-hero .asd-map-lines {\r
+  position: absolute;\r
+  inset: 0;\r
+  width: 100%;\r
+  height: 100%;\r
+  opacity: .48;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target {\r
+  position: absolute;\r
+  display: flex;\r
+  align-items: flex-start;\r
+  gap: 7px;\r
+  width: max-content;\r
+  max-width: 190px;\r
+  padding: 6px 8px;\r
+  border: 1px solid rgba(54, 218, 180, .2);\r
+  background: rgba(3, 19, 31, .66);\r
+  box-shadow: 0 0 18px rgba(25, 209, 166, .04);\r
+  color: #9bb6c4;\r
+  font: 600 8px/1.45 'Roboto Mono', 'Courier New', monospace;\r
+  letter-spacing: .035em;\r
+  opacity: 0;\r
+  will-change: transform, opacity;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target--west {\r
+  top: 25%;\r
+  left: 3.2%;\r
+  animation: asd-track-east 64s 1s linear infinite;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target--east {\r
+  top: 20%;\r
+  right: 3.2%;\r
+  flex-direction: row-reverse;\r
+  text-align: right;\r
+  animation: asd-track-west 76s 9s linear infinite;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target--southwest {\r
+  bottom: 18%;\r
+  left: 6%;\r
+  animation: asd-track-northeast 83s 17s linear infinite;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target--southeast {\r
+  right: 5%;\r
+  bottom: 15%;\r
+  flex-direction: row-reverse;\r
+  text-align: right;\r
+  animation: asd-track-northwest 71s 26s linear infinite;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target__symbol {\r
+  position: relative;\r
+  display: grid;\r
+  width: 18px;\r
+  height: 18px;\r
+  flex: 0 0 18px;\r
+  place-items: center;\r
+  margin-top: 1px;\r
+  color: #43f3bd;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target__symbol::before {\r
+  position: absolute;\r
+  inset: -3px;\r
+  border: 1px solid rgba(61, 241, 189, .38);\r
+  border-radius: 50%;\r
+  content: '';\r
+  animation: asd-target-ping 3.2s ease-out infinite;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target__symbol svg {\r
+  position: relative;\r
+  width: 14px;\r
+  height: 14px;\r
+  overflow: visible;\r
+  fill: rgba(45, 238, 183, .22);\r
+  stroke: currentColor;\r
+  stroke-linecap: round;\r
+  stroke-linejoin: round;\r
+  stroke-width: 1.35;\r
+  filter: drop-shadow(0 0 3px rgba(49, 246, 188, .65));\r
+}\r
+\r
+#top.asd-hero .asd-flight-target__data {\r
+  display: grid;\r
+  gap: 1px;\r
+  white-space: nowrap;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target__data strong {\r
+  color: #44efbd;\r
+  font-size: 9px;\r
+  letter-spacing: .09em;\r
+}\r
+\r
+#top.asd-hero .asd-flight-target__data span:nth-child(2) {\r
+  color: #e2b549;\r
+}\r
+\r
+@keyframes asd-track-east {\r
+  0%, 100% { opacity: 0; transform: translate3d(-12px, 7px, 0); }\r
+  8%, 88% { opacity: .92; }\r
+  94% { opacity: 0; transform: translate3d(75px, -17px, 0); }\r
+}\r
+\r
+@keyframes asd-track-west {\r
+  0%, 100% { opacity: 0; transform: translate3d(12px, 4px, 0); }\r
+  8%, 88% { opacity: .92; }\r
+  94% { opacity: 0; transform: translate3d(-72px, 20px, 0); }\r
+}\r
+\r
+@keyframes asd-track-northeast {\r
+  0%, 100% { opacity: 0; transform: translate3d(-10px, 10px, 0); }\r
+  8%, 88% { opacity: .92; }\r
+  94% { opacity: 0; transform: translate3d(68px, -34px, 0); }\r
+}\r
+\r
+@keyframes asd-track-northwest {\r
+  0%, 100% { opacity: 0; transform: translate3d(10px, 10px, 0); }\r
+  8%, 88% { opacity: .92; }\r
+  94% { opacity: 0; transform: translate3d(-64px, -32px, 0); }\r
+}\r
+\r
+@keyframes asd-target-ping {\r
+  0% { opacity: .8; transform: scale(.65); }\r
+  75%, 100% { opacity: 0; transform: scale(1.8); }\r
+}\r
+\r
 @keyframes asd-background-sweep {\r
   to { transform: rotate(360deg); }\r
 }\r
@@ -59,9 +199,96 @@ Error generating stack: `+e.message+`
 @media (prefers-reduced-motion: reduce) {\r
   #top.asd-hero::before,\r
   #top.asd-hero::after,\r
-  #top.asd-hero .animate-sweep { animation: none !important; }\r
+  #top.asd-hero .animate-sweep,\r
+  #top.asd-hero .asd-flight-target,\r
+  #top.asd-hero .asd-flight-target__symbol::before { animation: none !important; }\r
+\r
+  #top.asd-hero .asd-flight-target { opacity: .86; }\r
 }\r
-`,p=e((e=>{var t=Symbol.for(`react.transitional.element`);function n(e,n,r){var i=null;if(r!==void 0&&(i=``+r),n.key!==void 0&&(i=``+n.key),`key`in n)for(var a in r={},n)a!==`key`&&(r[a]=n[a]);else r=n;return n=r.ref,{$$typeof:t,type:e,key:i,ref:n===void 0?null:n,props:r}}e.jsx=n})),m=e(((e,t)=>{t.exports=p()}))(),h=d.replace(`</head>`,`<style>${f}</style></head>`).replace(`</body>`,`<script>(() => {
+\r
+@media (max-width: 720px) {\r
+  #top.asd-hero .asd-flight-target {\r
+    gap: 4px;\r
+    max-width: 150px;\r
+    padding: 4px 5px;\r
+    font-size: 7px;\r
+  }\r
+\r
+  #top.asd-hero .asd-flight-target__symbol {\r
+    width: 14px;\r
+    height: 14px;\r
+    flex-basis: 14px;\r
+  }\r
+\r
+  #top.asd-hero .asd-flight-target__symbol svg { width: 12px; height: 12px; }\r
+  #top.asd-hero .asd-flight-target--east { top: 27%; right: 2%; }\r
+  #top.asd-hero .asd-flight-target--southwest { bottom: 12%; left: 2%; }\r
+  #top.asd-hero .asd-flight-target--southeast { right: 2%; bottom: 9%; }\r
+}\r
+\r
+@media (max-width: 420px) {\r
+  #top.asd-hero .asd-flight-target--southwest,\r
+  #top.asd-hero .asd-flight-target--southeast { display: none; }\r
+}\r
+`,p=e((e=>{var t=Symbol.for(`react.transitional.element`);function n(e,n,r){var i=null;if(r!==void 0&&(i=``+r),n.key!==void 0&&(i=``+n.key),`key`in n)for(var a in r={},n)a!==`key`&&(r[a]=n[a]);else r=n;return n=r.ref,{$$typeof:t,type:e,key:i,ref:n===void 0?null:n,props:r}}e.jsx=n})),m=e(((e,t)=>{t.exports=p()}))(),h=`(() => {
+  const markup = ${JSON.stringify(`
+  <div class="asd-map-layer" role="img" aria-label="Illustrative sector map with moving synthetic aircraft targets">
+    <svg class="asd-map-lines" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <pattern id="asd-map-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+          <path d="M48 0H0V48" fill="none" stroke="#57bdd0" stroke-opacity=".2" stroke-width=".7" />
+        </pattern>
+        <radialGradient id="asd-map-wash">
+          <stop offset="0" stop-color="#20d4ae" stop-opacity=".08" />
+          <stop offset="1" stop-color="#20d4ae" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="1440" height="900" fill="url(#asd-map-grid)" />
+      <ellipse cx="720" cy="450" rx="690" ry="410" fill="url(#asd-map-wash)" />
+      <g fill="none" stroke="#45ddb6" stroke-opacity=".2" stroke-width="1">
+        <ellipse cx="720" cy="450" rx="660" ry="380" stroke-dasharray="2 8" />
+        <ellipse cx="720" cy="450" rx="470" ry="270" stroke-dasharray="2 9" />
+        <ellipse cx="720" cy="450" rx="250" ry="145" stroke-dasharray="2 9" />
+        <path d="M30 450H1410M720 35V865M205 180L1235 720M1240 180L200 720" stroke-opacity=".16" />
+      </g>
+      <g fill="none" stroke="#dfa936" stroke-opacity=".28" stroke-width="1.4">
+        <path d="M66 355 260 155 630 190 786 410 654 700 236 748 75 548Z" />
+        <path d="M850 170 1170 140 1380 315 1320 560 1040 650 850 510Z" stroke-dasharray="7 7" />
+      </g>
+      <g fill="none" stroke="#47c9d5" stroke-opacity=".28" stroke-width="1" stroke-dasharray="4 7">
+        <path d="M80 230Q260 120 430 240T760 305" />
+        <path d="M1090 730Q1230 620 1390 710" />
+        <path d="M90 680Q230 580 390 660" />
+      </g>
+      <g fill="#7cebd1" fill-opacity=".7" stroke="#7cebd1" stroke-opacity=".6">
+        <circle cx="260" cy="155" r="3" /><circle cx="430" cy="240" r="3" />
+        <circle cx="1170" cy="140" r="3" /><circle cx="1040" cy="650" r="3" />
+        <circle cx="230" cy="580" r="3" /><circle cx="1230" cy="620" r="3" />
+      </g>
+      <g fill="#8de8d2" fill-opacity=".55" font-family="Roboto Mono, monospace" font-size="11" letter-spacing="2">
+        <text x="274" y="148">LAM</text><text x="444" y="233">BPK</text>
+        <text x="1184" y="133">DVR</text><text x="1054" y="643">N14</text>
+        <text x="244" y="573">OCK</text><text x="1244" y="613">SFD</text>
+      </g>
+    </svg>
+    <div class="asd-flight-target asd-flight-target--west" aria-hidden="true">
+      <span class="asd-flight-target__symbol"><svg viewBox="0 0 24 24"><path d="M12 2 16 21 12 18 8 21Z" /><path d="M12 3V18" /></svg></span>
+      <span class="asd-flight-target__data"><strong>BAW21K</strong><span>B772 · FL280 · GS 421kt</span><span>HDG 091° · DCT LAM</span></span>
+    </div>
+    <div class="asd-flight-target asd-flight-target--east" aria-hidden="true">
+      <span class="asd-flight-target__symbol"><svg viewBox="0 0 24 24"><path d="M12 2 16 21 12 18 8 21Z" /><path d="M12 3V18" /></svg></span>
+      <span class="asd-flight-target__data"><strong>EZY12W</strong><span>A319 · FL190↓ · GS 430kt</span><span>HDG 074° · EGLL–EHAM</span></span>
+    </div>
+    <div class="asd-flight-target asd-flight-target--southwest" aria-hidden="true">
+      <span class="asd-flight-target__symbol"><svg viewBox="0 0 24 24"><path d="M12 2 16 21 12 18 8 21Z" /><path d="M12 3V18" /></svg></span>
+      <span class="asd-flight-target__data"><strong>AFR77</strong><span>A320 · FL310 · GS 437kt</span><span>HDG 018° · LFPG–EBBR</span></span>
+    </div>
+    <div class="asd-flight-target asd-flight-target--southeast" aria-hidden="true">
+      <span class="asd-flight-target__symbol"><svg viewBox="0 0 24 24"><path d="M12 2 16 21 12 18 8 21Z" /><path d="M12 3V18" /></svg></span>
+      <span class="asd-flight-target__data"><strong>UAE5</strong><span>A388 · FL390 · GS 482kt</span><span>HDG 242° · OMAA–EGLL</span></span>
+    </div>
+  </div>
+`)};
   const mount = () => {
     const hero = document.querySelector('#top');
     if (!hero) {
@@ -69,6 +296,9 @@ Error generating stack: `+e.message+`
       return;
     }
     hero.classList.add('asd-hero');
+    if (!hero.querySelector('.asd-map-layer')) {
+      hero.insertAdjacentHTML('afterbegin', markup);
+    }
   };
   mount();
-})()<\/script></body>`);function g(){return(0,m.jsx)(`main`,{className:`fixed inset-0 bg-[#020d1d]`,children:(0,m.jsx)(`iframe`,{title:`Karl Mendoza portfolio design`,srcDoc:h,sandbox:`allow-scripts allow-forms allow-popups`,referrerPolicy:`no-referrer`,className:`h-full w-full border-0`})})}(0,u.createRoot)(document.getElementById(`root`)).render((0,m.jsx)(l.StrictMode,{children:(0,m.jsx)(g,{})}));
+})()`,g=d.replace(`</head>`,`<style>${f}</style></head>`).replace(`</body>`,`<script>${h}<\/script></body>`);function _(){return(0,m.jsx)(`main`,{className:`fixed inset-0 bg-[#020d1d]`,children:(0,m.jsx)(`iframe`,{title:`Karl Mendoza portfolio design`,srcDoc:g,sandbox:`allow-scripts allow-forms allow-popups`,referrerPolicy:`no-referrer`,className:`h-full w-full border-0`})})}(0,u.createRoot)(document.getElementById(`root`)).render((0,m.jsx)(l.StrictMode,{children:(0,m.jsx)(_,{})}));
