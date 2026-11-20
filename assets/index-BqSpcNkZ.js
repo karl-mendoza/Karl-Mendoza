@@ -291,14 +291,13 @@ Error generating stack: `+e.message+`
 `)};
   const mount = () => {
     const hero = document.querySelector('#top');
-    if (!hero) {
-      window.setTimeout(mount, 50);
-      return;
-    }
+    if (!hero) return;
     hero.classList.add('asd-hero');
     if (!hero.querySelector('.asd-map-layer')) {
       hero.insertAdjacentHTML('afterbegin', markup);
     }
   };
+  const observer = new MutationObserver(mount);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
   mount();
 })()`,g=d.replace(`</head>`,`<style>${f}</style></head>`).replace(`</body>`,`<script>${h}<\/script></body>`);function _(){return(0,m.jsx)(`main`,{className:`fixed inset-0 bg-[#020d1d]`,children:(0,m.jsx)(`iframe`,{title:`Karl Mendoza portfolio design`,srcDoc:g,sandbox:`allow-scripts allow-forms allow-popups`,referrerPolicy:`no-referrer`,className:`h-full w-full border-0`})})}(0,u.createRoot)(document.getElementById(`root`)).render((0,m.jsx)(l.StrictMode,{children:(0,m.jsx)(_,{})}));
