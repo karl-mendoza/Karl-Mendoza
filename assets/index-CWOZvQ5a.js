@@ -52,170 +52,8 @@ Error generating stack: `+e.message+`
   z-index: 1;\r
 }\r
 \r
-.asd-console-row {\r
-  z-index: 2 !important;\r
-  display: grid;\r
-  grid-column: 1 / -1;\r
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);\r
-  gap: 1rem;\r
-  align-items: stretch;\r
-  margin-top: -.4rem;\r
-}\r
-\r
-.asd-panel {\r
-  min-width: 0;\r
-  border: 1px solid rgba(70, 240, 168, .22);\r
-  background: linear-gradient(145deg, rgba(4, 24, 39, .9), rgba(5, 35, 50, .72));\r
-  box-shadow: inset 0 1px rgba(143, 240, 215, .04), 0 14px 40px rgba(0, 7, 15, .2);\r
-  -webkit-backdrop-filter: blur(10px);\r
-  backdrop-filter: blur(10px);\r
-}\r
-\r
-.asd-panel-heading {\r
-  display: flex;\r
-  min-height: 38px;\r
-  align-items: center;\r
-  justify-content: space-between;\r
-  gap: .75rem;\r
-  border-bottom: 1px solid rgba(78, 172, 190, .18);\r
-  padding: .55rem .8rem;\r
-  color: #46f0a8;\r
-  font: 500 9px/1.4 'Roboto Mono', monospace;\r
-  letter-spacing: .14em;\r
-  text-transform: uppercase;\r
-}\r
-\r
-.asd-panel-heading span:last-child {\r
-  color: #92aebe;\r
-  font-size: 8px;\r
-  letter-spacing: .08em;\r
-}\r
-\r
-.asd-sim-tag {\r
-  display: inline-flex;\r
-  align-items: center;\r
-  gap: .4rem;\r
-  color: #e8b23a !important;\r
-}\r
-\r
-.asd-sim-tag::before {\r
-  width: 6px;\r
-  height: 6px;\r
-  border-radius: 50%;\r
-  background: #e8b23a;\r
-  box-shadow: 0 0 8px rgba(232, 178, 58, .55);\r
-  content: '';\r
-}\r
-\r
-.asd-status-grid {\r
-  display: grid;\r
-  grid-template-columns: repeat(3, minmax(0, 1fr));\r
-  padding: .55rem;\r
-}\r
-\r
-.asd-status-cell {\r
-  min-width: 0;\r
-  padding: .55rem .55rem .6rem;\r
-}\r
-\r
-.asd-status-cell:nth-child(3n + 2),\r
-.asd-status-cell:nth-child(3n + 3) {\r
-  border-left: 1px solid rgba(78, 172, 190, .16);\r
-}\r
-\r
-.asd-status-cell:nth-child(n + 4) {\r
-  border-top: 1px solid rgba(78, 172, 190, .16);\r
-}\r
-\r
-.asd-label {\r
-  display: block;\r
-  margin-bottom: .45rem;\r
-  color: #829eae;\r
-  font: 8px/1.3 'Roboto Mono', monospace;\r
-  letter-spacing: .1em;\r
-  text-transform: uppercase;\r
-}\r
-\r
-.asd-value {\r
-  display: block;\r
-  overflow: hidden;\r
-  color: #e1edf0;\r
-  font: 600 13px/1.25 'Roboto Mono', monospace;\r
-  text-overflow: ellipsis;\r
-  white-space: nowrap;\r
-}\r
-\r
-.asd-value.is-ok { color: #46f0a8; }\r
-.asd-value.is-caution { color: #e8b23a; }\r
-\r
-.asd-subvalue {\r
-  display: block;\r
-  margin-top: .3rem;\r
-  color: #91a9b7;\r
-  font: 8px/1.4 'Roboto Mono', monospace;\r
-}\r
-\r
-.asd-flight-table {\r
-  overflow-x: auto;\r
-  padding: .25rem .75rem .45rem;\r
-}\r
-\r
-.asd-flight-head,\r
-.asd-flight-row {\r
-  display: grid;\r
-  grid-template-columns: minmax(70px, .85fr) minmax(100px, 1.3fr) minmax(48px, .65fr) minmax(42px, .5fr) minmax(42px, .5fr);\r
-  align-items: center;\r
-  gap: .55rem;\r
-  min-width: 450px;\r
-}\r
-\r
-.asd-flight-head {\r
-  min-height: 25px;\r
-  color: #829eae;\r
-  font: 8px/1 'Roboto Mono', monospace;\r
-  letter-spacing: .08em;\r
-  text-transform: uppercase;\r
-}\r
-\r
-.asd-flight-row {\r
-  min-height: 29px;\r
-  border-top: 1px solid rgba(78, 172, 190, .12);\r
-  color: #d8e6eb;\r
-  font: 9px/1.2 'Roboto Mono', monospace;\r
-}\r
-\r
-.asd-flight-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
-.asd-flight-callsign { color: #46f0a8; font-weight: 600; }\r
-.asd-flight-route { color: #a7bdc7; }\r
-.asd-flight-level { color: #e8b23a; }\r
-.asd-flight-state { display: inline-flex; align-items: center; gap: .35rem; }\r
-.asd-flight-state::before { width: 5px; height: 5px; flex: none; border-radius: 50%; background: #46f0a8; content: ''; }\r
-\r
 @keyframes asd-background-sweep {\r
   to { transform: rotate(360deg); }\r
-}\r
-\r
-@media (max-width: 760px) {\r
-  .asd-console-row { grid-template-columns: 1fr; }\r
-  .asd-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
-  .asd-status-cell:nth-child(3n + 2),\r
-  .asd-status-cell:nth-child(3n + 3) { border-left: 0; }\r
-  .asd-status-cell:nth-child(even) { border-left: 1px solid rgba(78, 172, 190, .16); }\r
-  .asd-status-cell:nth-child(n + 3) { border-top: 1px solid rgba(78, 172, 190, .16); }\r
-  .asd-status-cell { padding-inline: .35rem; }\r
-  .asd-value { font-size: 11px; }\r
-}\r
-\r
-@media (max-width: 420px) {\r
-  .asd-panel-heading { padding-inline: .55rem; font-size: 8px; }\r
-  .asd-panel-heading span:last-child { font-size: 7px; }\r
-  .asd-status-grid { padding: .35rem; }\r
-  .asd-status-cell { padding: .5rem .35rem; }\r
-  .asd-label, .asd-subvalue { font-size: 7px; }\r
-  .asd-flight-table { padding-inline: .5rem; }\r
-  .asd-flight-head, .asd-flight-row { grid-template-columns: 62px 1fr 44px 38px 38px; gap: .35rem; min-width: 390px; }\r
-  .asd-flight-head { font-size: 7px; }\r
-  .asd-flight-row { font-size: 8px; }\r
 }\r
 \r
 @media (prefers-reduced-motion: reduce) {\r
@@ -223,48 +61,14 @@ Error generating stack: `+e.message+`
   #top.asd-hero::after,\r
   #top.asd-hero .animate-sweep { animation: none !important; }\r
 }\r
-`,p=e((e=>{var t=Symbol.for(`react.transitional.element`);function n(e,n,r){var i=null;if(r!==void 0&&(i=``+r),n.key!==void 0&&(i=``+n.key),`key`in n)for(var a in r={},n)a!==`key`&&(r[a]=n[a]);else r=n;return n=r.ref,{$$typeof:t,type:e,key:i,ref:n===void 0?null:n,props:r}}e.jsx=n})),m=e(((e,t)=>{t.exports=p()}))(),h=`(() => {
-  const markup = ${JSON.stringify(`
-  <div class="asd-console-row" aria-label="Airspace situation data">
-    <section class="asd-panel" aria-label="Sector status">
-      <div class="asd-panel-heading">
-        <span>En-route control · Sector N14</span>
-        <span class="asd-sim-tag">Simulation · Synthetic traffic</span>
-      </div>
-      <div class="asd-status-grid">
-        <div class="asd-status-cell"><span class="asd-label">Identified tracks</span><strong class="asd-value is-ok">07 ACTIVE</strong><span class="asd-subvalue">Mode S / ADS-B</span></div>
-        <div class="asd-status-cell"><span class="asd-label">Separation</span><strong class="asd-value is-ok">NORMAL</strong><span class="asd-subvalue">0 alerts · 0 STCA</span></div>
-        <div class="asd-status-cell"><span class="asd-label">Pressure</span><strong class="asd-value">1013 hPa</strong><span class="asd-subvalue">QNH · local setting</span></div>
-        <div class="asd-status-cell"><span class="asd-label">Conditions</span><strong class="asd-value is-ok">VMC</strong><span class="asd-subvalue">Visibility 10 km</span></div>
-        <div class="asd-status-cell"><span class="asd-label">Surface wind</span><strong class="asd-value">240° / 08 kt</strong><span class="asd-subvalue">Light · steady</span></div>
-        <div class="asd-status-cell"><span class="asd-label">Sector frequency</span><strong class="asd-value">123.725</strong><span class="asd-subvalue">N14 · MHz</span></div>
-      </div>
-    </section>
-    <section class="asd-panel" aria-label="Selected flight information">
-      <div class="asd-panel-heading"><span>Traffic picture · identified tracks</span><span>Ground speed · magnetic heading</span></div>
-      <div class="asd-flight-table" role="table" aria-label="Synthetic flight data">
-        <div class="asd-flight-head" role="row"><span role="columnheader">Callsign</span><span role="columnheader">Route</span><span role="columnheader">Level</span><span role="columnheader">GS kt</span><span role="columnheader">HDG</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">EZY12W</span><span class="asd-flight-route" role="cell">EGLL → EHAM</span><span class="asd-flight-level" role="cell">FL190 ↓</span><span role="cell">430</span><span class="asd-flight-state" role="cell">074°</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">UAE5</span><span class="asd-flight-route" role="cell">OMAA → EGLL</span><span class="asd-flight-level" role="cell">FL390</span><span role="cell">482</span><span class="asd-flight-state" role="cell">242°</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">RYR8QX</span><span class="asd-flight-route" role="cell">EGKK → EHAM</span><span class="asd-flight-level" role="cell">FL370 ↑</span><span role="cell">446</span><span class="asd-flight-state" role="cell">311°</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">KLM6P</span><span class="asd-flight-route" role="cell">EHAM → EBBR</span><span class="asd-flight-level" role="cell">FL240</span><span role="cell">392</span><span class="asd-flight-state" role="cell">325°</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">DLH4AB</span><span class="asd-flight-route" role="cell">EDDF → EGLL</span><span class="asd-flight-level" role="cell">FL350</span><span role="cell">458</span><span class="asd-flight-state" role="cell">286°</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">BAW21K</span><span class="asd-flight-route" role="cell">EGLL → EHAM</span><span class="asd-flight-level" role="cell">FL280</span><span role="cell">421</span><span class="asd-flight-state" role="cell">091°</span></div>
-        <div class="asd-flight-row" role="row"><span class="asd-flight-callsign" role="cell">AFR77</span><span class="asd-flight-route" role="cell">LFPG → EBBR</span><span class="asd-flight-level" role="cell">FL310</span><span role="cell">437</span><span class="asd-flight-state" role="cell">018°</span></div>
-      </div>
-    </section>
-  </div>
-`)};
+`,p=e((e=>{var t=Symbol.for(`react.transitional.element`);function n(e,n,r){var i=null;if(r!==void 0&&(i=``+r),n.key!==void 0&&(i=``+n.key),`key`in n)for(var a in r={},n)a!==`key`&&(r[a]=n[a]);else r=n;return n=r.ref,{$$typeof:t,type:e,key:i,ref:n===void 0?null:n,props:r}}e.jsx=n})),m=e(((e,t)=>{t.exports=p()}))(),h=d.replace(`</head>`,`<style>${f}</style></head>`).replace(`</body>`,`<script>(() => {
   const mount = () => {
     const hero = document.querySelector('#top');
     if (!hero) {
       window.setTimeout(mount, 50);
       return;
     }
-    if (!hero.querySelector('.asd-console-row')) {
-      hero.classList.add('asd-hero');
-      hero.insertAdjacentHTML('beforeend', markup);
-    }
+    hero.classList.add('asd-hero');
   };
   mount();
-})()`,g=d.replace(`</head>`,`<style>${f}</style></head>`).replace(`</body>`,`<script>${h}<\/script></body>`);function _(){return(0,m.jsx)(`main`,{className:`fixed inset-0 bg-[#020d1d]`,children:(0,m.jsx)(`iframe`,{title:`Karl Mendoza portfolio design`,srcDoc:g,sandbox:`allow-scripts allow-forms allow-popups`,referrerPolicy:`no-referrer`,className:`h-full w-full border-0`})})}(0,u.createRoot)(document.getElementById(`root`)).render((0,m.jsx)(l.StrictMode,{children:(0,m.jsx)(_,{})}));
+})()<\/script></body>`);function g(){return(0,m.jsx)(`main`,{className:`fixed inset-0 bg-[#020d1d]`,children:(0,m.jsx)(`iframe`,{title:`Karl Mendoza portfolio design`,srcDoc:h,sandbox:`allow-scripts allow-forms allow-popups`,referrerPolicy:`no-referrer`,className:`h-full w-full border-0`})})}(0,u.createRoot)(document.getElementById(`root`)).render((0,m.jsx)(l.StrictMode,{children:(0,m.jsx)(g,{})}));
