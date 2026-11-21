@@ -41,13 +41,13 @@
   })
 
   /* ------------------------------------------------- UI/UX sub-menu ---- */
-  // "04 UI/UX" plus its pages (Design System, Style Guide): the same markup,
+  // "03 UI/UX" plus its pages (Design System, Style Guide): the same markup,
   // classes (`.km-nav-group*`, `.km-sub` in App.css) and keyboard behaviour as
   // src/components/site/UiuxNavItem.tsx. Dropdown on desktop, expandable list
   // in the wrapped mobile header.
   const uiuxPages = [
-    { number: '04.1', label: 'Design System', path: '/ui-ux/design-system' },
-    { number: '04.2', label: 'Style Guide', path: '/ui-ux/style-guide' },
+    { number: '03.1', label: 'Design System', path: '/ui-ux/design-system' },
+    { number: '03.2', label: 'Style Guide', path: '/ui-ux/style-guide' },
   ]
   const desktopHover = window.matchMedia?.('(min-width: 721px) and (hover: hover) and (pointer: fine)')
 
@@ -66,7 +66,7 @@
     link.href = appLink('/ui-ux')
     const number = document.createElement('span')
     number.className = 'mr-1.5 text-ok'
-    number.textContent = '04'
+    number.textContent = '03'
     link.append(number, document.createTextNode('UI/UX'))
 
     const toggle = document.createElement('button')
@@ -312,7 +312,7 @@
     if (!paragraph || paragraph.querySelector('[data-intro-emphasis]')) return
     const emphasis = document.createElement('strong')
     emphasis.dataset.introEmphasis = 'true'
-    emphasis.textContent = 'AI-driven UI/UX design architect and UI engineer'
+    emphasis.textContent = 'AI-driven UI/UX design architect & UI software engineer'
     // Name + a small Canadian flag, kept together on one line.
     const name = document.createElement('span')
     name.className = 'asd-intro-name'
