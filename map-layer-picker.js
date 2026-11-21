@@ -258,7 +258,11 @@
         if (!root.contains(document.activeElement)) setOpen(false)
       }, 320)
     })
-    on(root, 'focusin', () => setOpen(true))
+    let escaping = false // focus returned by Escape must not reopen the panel
+    on(root, 'focusin', () => {
+      if (escaping) escaping = false
+      else setOpen(true)
+    })
     on(root, 'focusout', e => {
       if (!root.contains(e.relatedTarget)) closeTimer = window.setTimeout(() => setOpen(false), 120)
     })
@@ -271,7 +275,10 @@
         trigger.focus()
       } else {
         setOpen(false)
-        tile.focus()
+        if (document.activeElement !== tile) {
+          escaping = true
+          tile.focus()
+        }
       }
     })
     on(document, 'pointerdown', e => {

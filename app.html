@@ -11,21 +11,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <title>Karl Mendoza · ATC HMI Design &amp; Front-End Software Engineering</title>
     <script>
-      // Apply the visitor's theme (shared with the portfolio) before first paint.
+      // Apply the visitor's theme (shared with the portfolio) before first paint:
+      // their saved DAY/NIGHT choice, else the system preference.
       ;(function () {
-        var theme = 'dark'
+        var saved = null
         try {
-          if (localStorage.getItem('karl.theme') === 'light') theme = 'light'
+          saved = localStorage.getItem('karl.theme')
         } catch (error) {
-          // Storage can be unavailable; keep the dark default.
+          // Storage can be unavailable; fall back to the system preference.
         }
+        var theme = saved === 'light' || saved === 'dark'
+          ? saved
+          : window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
         document.documentElement.dataset.theme = theme
         document.documentElement.style.colorScheme = theme
       })()
     </script>
-    <script type="module" crossorigin src="/Karl-Mendoza/assets/app-xQ-PAoaR.js"></script>
+    <script type="module" crossorigin src="/Karl-Mendoza/assets/app-DM-urO-f.js"></script>
     <link rel="modulepreload" crossorigin href="/Karl-Mendoza/assets/modulepreload-polyfill-BvLxCH9i.js">
-    <link rel="stylesheet" crossorigin href="/Karl-Mendoza/assets/app-Chriysr0.css">
+    <link rel="stylesheet" crossorigin href="/Karl-Mendoza/assets/app-D1PY7zjX.css">
   </head>
   <body>
     <div id="root"></div>

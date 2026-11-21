@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head><meta name="robots" content="noindex, nofollow" />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/Karl-Mendoza/dev/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#020d1d" />
+    <meta name="description" content="Karl Mendoza — Senior UI/UX Designer and front-end software engineer specializing in ATC HMI design." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <title>[DEV] Karl Mendoza · ATC HMI Design &amp; Front-End Software Engineering</title>
+    <script>
+      // Apply the visitor's theme (shared with the portfolio) before first paint:
+      // their saved DAY/NIGHT choice, else the system preference.
+      ;(function () {
+        var saved = null
+        try {
+          saved = localStorage.getItem('karl.theme')
+        } catch (error) {
+          // Storage can be unavailable; fall back to the system preference.
+        }
+        var theme = saved === 'light' || saved === 'dark'
+          ? saved
+          : window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        document.documentElement.dataset.theme = theme
+        document.documentElement.style.colorScheme = theme
+      })()
+    </script>
+    <script type="module" crossorigin src="/Karl-Mendoza/dev/assets/app-5RNqvq2_.js"></script>
+    <link rel="modulepreload" crossorigin href="/Karl-Mendoza/dev/assets/modulepreload-polyfill-BvLxCH9i.js">
+    <link rel="stylesheet" crossorigin href="/Karl-Mendoza/dev/assets/app-D1PY7zjX.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
