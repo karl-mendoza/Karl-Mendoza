@@ -41,13 +41,13 @@
   })
 
   /* ------------------------------------------------- UI/UX sub-menu ---- */
-  // "06 UI/UX" plus its pages (Design System, Style Guide): the same markup,
+  // "04 UI/UX" plus its pages (Design System, Style Guide): the same markup,
   // classes (`.km-nav-group*`, `.km-sub` in App.css) and keyboard behaviour as
   // src/components/site/UiuxNavItem.tsx. Dropdown on desktop, expandable list
   // in the wrapped mobile header.
   const uiuxPages = [
-    { number: '06.1', label: 'Design System', path: '/ui-ux/design-system' },
-    { number: '06.2', label: 'Style Guide', path: '/ui-ux/style-guide' },
+    { number: '04.1', label: 'Design System', path: '/ui-ux/design-system' },
+    { number: '04.2', label: 'Style Guide', path: '/ui-ux/style-guide' },
   ]
   const desktopHover = window.matchMedia?.('(min-width: 721px) and (hover: hover) and (pointer: fine)')
 
@@ -66,7 +66,7 @@
     link.href = appLink('/ui-ux')
     const number = document.createElement('span')
     number.className = 'mr-1.5 text-ok'
-    number.textContent = '06'
+    number.textContent = '04'
     link.append(number, document.createTextNode('UI/UX'))
 
     const toggle = document.createElement('button')
