@@ -41,13 +41,13 @@
   })
 
   /* ------------------------------------------------- UI/UX sub-menu ---- */
-  // "03 UI/UX" plus its pages (Design System, Style Guide): the same markup,
+  // "03 UI/UX" plus its pages (Design System, Application User Manual): the same markup,
   // classes (`.km-nav-group*`, `.km-sub` in App.css) and keyboard behaviour as
   // src/components/site/UiuxNavItem.tsx. Dropdown on desktop, expandable list
   // in the wrapped mobile header.
   const uiuxPages = [
     { number: '03.1', label: 'Design System', path: '/ui-ux/design-system' },
-    { number: '03.2', label: 'Style Guide', path: '/ui-ux/style-guide' },
+    { number: '03.2', label: 'Application User Manual', path: '/ui-ux/user-manual' },
   ]
   const desktopHover = window.matchMedia?.('(min-width: 721px) and (hover: hover) and (pointer: fine)')
 
