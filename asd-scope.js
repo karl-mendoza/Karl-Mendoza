@@ -12,7 +12,8 @@
  *
  * Display styles (ATM/ATC backgrounds), cross-faded when switched:
  *   radar (standard scope) · sectors (airspace volumes, frequencies, limits) ·
- *   terrain (relief, contours, spot heights, MSA) · geo (land/sea, rivers,
+ *   terrain (relief, contours, spot heights, MSA) · technology (the terrain
+ *   picture and effects in a blue / violet palette) · geo (land/sea, rivers,
  *   towns, roads) · declutter (map faded so traffic stands out).
  * Overlays ("map details"): airways & fixes, airspace, range rings, weather,
  * track labels. Geography comes from public/asd-world.js (generated in time
@@ -110,6 +111,7 @@
     { id: 'radar', label: 'Radar', description: 'Standard radar scope' },
     { id: 'sectors', label: 'Sectors', description: 'Sector volumes, frequencies and limits' },
     { id: 'terrain', label: 'Terrain', description: 'Relief, contours, spot heights and MSA' },
+    { id: 'technology', label: 'Technology', description: 'Terrain relief, contours and MSA in a technology palette' },
     { id: 'geo', label: 'Geographic', description: 'Coastline, rivers, towns and roads' },
     { id: 'declutter', label: 'Declutter', description: 'Map faded so traffic stands out' },
   ]
@@ -193,6 +195,11 @@
           urban: 'rgba(120, 108, 96, .16)', town: 'rgba(23, 42, 53, .92)', townLabel: 'rgba(32, 48, 60, .9)', peak: 'rgba(78, 58, 28, .92)',
           msa: 'rgba(131, 80, 0, .72)', msaLabel: '#6b4300', sectorFill: [[40, 90, 200], [0, 140, 130], [120, 70, 190], [40, 140, 70], [190, 120, 0]],
           sectorFillAlpha: .075, sectorEdge: 'rgba(118, 80, 0, .62)', sectorName: 'rgba(104, 70, 0, .95)', freq: 'rgba(32, 48, 60, .82)', tmaFill: [0, 98, 123],
+          // Technology style: the terrain line work and labels, recoloured.
+          tech: {
+            coastline: 'rgba(10, 70, 150, .62)', contour: 'rgba(20, 70, 150, .18)', contourIndex: 'rgba(20, 70, 150, .4)', depth: 'rgba(60, 50, 160, .18)',
+            peak: 'rgba(14, 50, 110, .92)', msa: 'rgba(90, 50, 170, .72)', msaLabel: '#4b2a8f',
+          },
         }
       : {
           ring: 'rgba(87, 189, 208, .11)', ringLabel: 'rgba(141, 232, 210, .4)',
@@ -209,6 +216,11 @@
           urban: 'rgba(170, 180, 192, .07)', town: 'rgba(220, 234, 243, .9)', townLabel: 'rgba(196, 212, 226, .82)', peak: 'rgba(226, 214, 184, .88)',
           msa: 'rgba(232, 178, 58, .62)', msaLabel: 'rgba(240, 196, 98, .95)', sectorFill: [[70, 140, 230], [60, 200, 190], [170, 120, 230], [90, 200, 120], [230, 170, 70]],
           sectorFillAlpha: .07, sectorEdge: 'rgba(223, 169, 54, .55)', sectorName: 'rgba(240, 200, 110, .9)', freq: 'rgba(196, 212, 226, .75)', tmaFill: [71, 201, 213],
+          // Technology style: the terrain line work and labels, recoloured.
+          tech: {
+            coastline: 'rgba(120, 210, 255, .6)', contour: 'rgba(90, 200, 255, .16)', contourIndex: 'rgba(120, 220, 255, .34)', depth: 'rgba(110, 120, 255, .16)',
+            peak: 'rgba(170, 230, 255, .9)', msa: 'rgba(160, 140, 255, .62)', msaLabel: 'rgba(190, 176, 255, .95)',
+          },
         }
   }
 
@@ -437,15 +449,23 @@
           if (set.kind === 'land') segments(set, pal.contour, 0.8)
           else if (set.kind === 'index') segments(set, pal.contourIndex, 1.15)
           else if (set.kind === 'depth') segments(set, pal.depth, 0.8)
+        } else if (styleId === 'technology') {
+          // Same line work as terrain, in the technology colours.
+          if (set.kind === 'land') segments(set, pal.tech.contour, 0.8)
+          else if (set.kind === 'index') segments(set, pal.tech.contourIndex, 1.15)
+          else if (set.kind === 'depth') segments(set, pal.tech.depth, 0.8)
         } else if (styleId === 'geo' && set.kind === 'depth' && set.level === -600) {
           segments(set, pal.depth, 0.8)
         }
       }
       const strong = styleId === 'terrain' || styleId === 'geo'
       const coastSet = world.contours.find(s => s.kind === 'coast')
-      if (coastSet) segments(coastSet, strong ? pal.coastline : pal.coast, strong ? 1.25 : 1.1)
+      if (styleId === 'technology') {
+        if (coastSet) segments(coastSet, pal.tech.coastline, 1.25)
+      } else if (coastSet) segments(coastSet, strong ? pal.coastline : pal.coast, strong ? 1.25 : 1.1)
       if (styleId === 'geo') drawRiversRoadsTowns(c, preview)
       if (styleId === 'terrain') drawTerrainAnnotations(c, preview)
+      if (styleId === 'technology') drawTerrainAnnotations(c, preview, pal.tech)
     }
 
     function drawRiversRoadsTowns(c, preview) {
@@ -508,7 +528,8 @@
       }
     }
 
-    function drawTerrainAnnotations(c, preview) {
+    // `colors`: line and label colours (terrain: the palette itself; technology: pal.tech).
+    function drawTerrainAnnotations(c, preview, colors = pal) {
       // Spot heights
       c.textAlign = 'left'
       c.textBaseline = 'middle'
@@ -516,7 +537,7 @@
         const px = toX(p.x)
         const py = toY(p.y)
         if (!onScreen(px, py, 40)) continue
-        c.fillStyle = pal.peak
+        c.fillStyle = colors.peak
         c.beginPath()
         c.moveTo(px, py - 4.2)
         c.lineTo(px + 3.8, py + 2.6)
@@ -534,7 +555,7 @@
       const cx = toX(m.center[0])
       const cy = toY(m.center[1])
       const r = m.radius * S
-      c.strokeStyle = pal.msa
+      c.strokeStyle = colors.msa
       c.lineWidth = 1.2
       c.setLineDash([6, 4])
       c.beginPath()
@@ -551,7 +572,7 @@
       }
       if (preview) return
       c.textAlign = 'center'
-      c.fillStyle = pal.msaLabel
+      c.fillStyle = colors.msaLabel
       c.font = `700 10px ${FONT}`
       for (const s of m.sectors) {
         const mid = (s.from + ((s.to - s.from + 360) % 360) / 2 - 90) * DEG
@@ -856,7 +877,22 @@
       c.drawImage(raster, (x0 - b.x0) * res, (b.y1 - y1) * res, (x1 - x0) * res, (y1 - y0) * res, toX(x0), toY(y1), (x1 - x0) * S, (y1 - y0) * S)
     }
 
-    /** Background fills of a style (terrain/geo rasters, sector tints) into `c`. */
+    // A style raster the current world has not built yet (the quick first-pass
+    // world builds Terrain only): build it once, then redraw and refresh previews.
+    let rasterJob = {}
+    function ensureRaster(styleId) {
+      const w = world
+      const key = `${styleId}:${theme}`
+      if (!w?.ensureRaster || (rasterJob.world === w && rasterJob.key === key)) return
+      rasterJob = { world: w, key }
+      w.ensureRaster(styleId, theme).then(() => {
+        if (world !== w) return
+        buildPreviews()
+        requestStaticDraw()
+      })
+    }
+
+    /** Background fills of a style (terrain/technology/geo rasters, sector tints) into `c`. */
     function renderBase(c, styleId, alpha, { preview = false } = {}) {
       if (alpha <= 0) return
       c.save()
@@ -876,10 +912,11 @@
         c.beginPath()
         c.arc(toX(CTR.center[0]), toY(CTR.center[1]), CTR.radius * S, 0, TAU)
         c.fill()
-      } else if ((styleId === 'terrain' || styleId === 'geo') && world?.ready) {
+      } else if ((styleId === 'terrain' || styleId === 'technology' || styleId === 'geo') && world?.ready) {
         c.globalAlpha = alpha * worldAlpha(preview)
         const raster = world.raster(styleId, theme)
         if (raster) drawRaster(c, raster)
+        else ensureRaster(styleId) // e.g. Technology picked before the full world is ready
         // Zoomed-in detail: a full-resolution render of the visible area.
         if (!preview && refined && refined.style === styleId && refined.theme === theme) {
           c.globalAlpha = alpha * worldAlpha() * ramp(refined.readyAt, 320)
@@ -905,7 +942,7 @@
     }
 
     function runRefine() {
-      if (!world?.ready || (style !== 'terrain' && style !== 'geo')) return
+      if (!world?.ready || (style !== 'terrain' && style !== 'technology' && style !== 'geo')) return
       syncCamera()
       // Only when the shared raster would be visibly magnified.
       if ((S / world.res) * dpr < 2.2) {
@@ -937,8 +974,39 @@
       radar: { center: [2, -6], span: 90, layers: { rings: true, airways: true, airspace: false } },
       sectors: { center: [-12, -4], span: 230, layers: { rings: false, airways: false, airspace: true } },
       terrain: { center: [42, 22], span: 110, layers: { rings: false, airways: false, airspace: false } },
+      technology: { center: [-60, 34], span: 110, layers: { rings: false, airways: false, airspace: false } },
       geo: { center: [22, -32], span: 110, layers: { rings: false, airways: false, airspace: false } },
       declutter: { center: [2, -6], span: 90, layers: { rings: true, airways: true, airspace: false } },
+    }
+
+    /** The Technology style's own mark in its preview: a small microchip, bottom right. */
+    function drawChipMark(c, size) {
+      const s = Math.round(size * 0.3)
+      const x = size - s - 4
+      const y = size - s - 4
+      const ink = theme === 'light' ? '#1f4fa8' : '#7fd8ff'
+      c.save()
+      c.fillStyle = theme === 'light' ? 'rgba(255, 255, 255, .9)' : 'rgba(4, 14, 36, .85)'
+      c.strokeStyle = ink
+      c.lineWidth = 1.2
+      c.beginPath()
+      c.roundRect(x + 3, y + 3, s - 6, s - 6, 2)
+      c.fill()
+      c.stroke()
+      // Pins: three per side.
+      c.beginPath()
+      for (let i = 1; i <= 3; i++) {
+        const p = x + 3 + ((s - 6) * i) / 4
+        const q = y + 3 + ((s - 6) * i) / 4
+        c.moveTo(p, y); c.lineTo(p, y + 3)
+        c.moveTo(p, y + s - 3); c.lineTo(p, y + s)
+        c.moveTo(x, q); c.lineTo(x + 3, q)
+        c.moveTo(x + s - 3, q); c.lineTo(x + s, q)
+      }
+      c.stroke()
+      c.fillStyle = ink
+      c.fillRect(x + s / 2 - 2.5, y + s / 2 - 2.5, 5, 5)
+      c.restore()
     }
 
     /** Small rendered preview of a style (for the style picker), as a data URL. */
@@ -980,6 +1048,7 @@
           c.fillRect(px + 9, py - 9, 8, 2)
           c.globalAlpha = 1
         }
+        if (styleId === 'technology') drawChipMark(c, size)
       } finally {
         W = saved.W
         H = saved.H
@@ -1579,7 +1648,7 @@
       // Background fills go underneath everything. They get a lighter
       // legibility mask (≈55%) so behind the hero copy they blend towards the
       // hero background rather than vanishing.
-      const hasBase = style === 'sectors' || style === 'terrain' || style === 'geo' || (fade && fade.from !== 'radar' && fade.from !== 'declutter')
+      const hasBase = style === 'sectors' || style === 'terrain' || style === 'technology' || style === 'geo' || (fade && fade.from !== 'radar' && fade.from !== 'declutter')
       if (!hasBase) return
       baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
       baseCtx.globalCompositeOperation = 'source-over'
@@ -1590,7 +1659,7 @@
       // outgoing fills stay at full strength underneath the incoming ones.
       const styleFade = fade && fade.from !== style
       if (styleFade) {
-        const opaqueIncoming = style === 'terrain' || style === 'geo'
+        const opaqueIncoming = style === 'terrain' || style === 'technology' || style === 'geo'
         renderBase(baseCtx, fade.from, (opaqueIncoming ? 1 : 1 - p) * BA)
       }
       renderBase(baseCtx, style, (styleFade ? p : 1) * BA)

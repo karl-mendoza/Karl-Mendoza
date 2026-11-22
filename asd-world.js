@@ -9,7 +9,8 @@
  *     every 5000 ft), depth contours, rivers (steepest-descent flow), towns,
  *     urban areas, roads, spot heights and the airport MSA (25 NM, 4 sectors,
  *     highest terrain + 1000 ft rounded up to 100 ft);
- *   - hypsometric + hill-shaded rasters per style/theme, plus on-demand
+ *   - hypsometric + hill-shaded rasters per style/theme (terrain; technology =
+ *     the same relief in a blue / violet palette; geo), plus on-demand
  *     high-resolution "refine" rasters for the visible area when zoomed in.
  *
  * Generation is time-sliced (cooperative generators) so it never blocks the
@@ -144,6 +145,18 @@
       light: {
         water: [[0, 206, 228, 240], [600, 188, 214, 232], [3000, 164, 196, 222]],
         land: [[0, 214, 234, 212], [800, 224, 236, 204], [2500, 234, 228, 192], [5000, 222, 204, 170], [8000, 206, 188, 166], [11000, 238, 234, 228]],
+      },
+    },
+    // Technology: the terrain relief (same elevation steps and hillshade) in a
+    // blue / violet digital palette. The terrain ramp above is unchanged.
+    technology: {
+      dark: {
+        water: [[0, 8, 16, 46], [600, 6, 12, 38], [3000, 4, 8, 28]],
+        land: [[0, 10, 34, 58], [800, 12, 42, 70], [2500, 20, 54, 92], [5000, 34, 64, 116], [8000, 56, 76, 140], [11000, 96, 116, 180]],
+      },
+      light: {
+        water: [[0, 212, 224, 246], [600, 196, 210, 240], [3000, 176, 192, 232]],
+        land: [[0, 226, 238, 246], [800, 216, 230, 244], [2500, 204, 218, 240], [5000, 194, 202, 236], [8000, 184, 188, 228], [11000, 234, 234, 248]],
       },
     },
     geo: {
@@ -554,7 +567,9 @@
         return [c[1], c[2], c[3]]
       }
       const c = ramp(rampSet.land, e)
-      const strength = style === 'terrain' ? (theme === 'dark' ? 0.55 : 0.32) : theme === 'dark' ? 0.22 : 0.12
+      // Relief styles (terrain, technology) share the strong hillshade.
+      const relief = style === 'terrain' || style === 'technology'
+      const strength = relief ? (theme === 'dark' ? 0.55 : 0.32) : theme === 'dark' ? 0.22 : 0.12
       const s = 1 + (shade - 1) * strength
       return [c[1] * s, c[2] * s, c[3] * s]
     }
@@ -589,6 +604,18 @@
     }
 
     world.raster = (style, theme) => world.rasters.get(`${style}:${theme}`) || null
+
+    /**
+     * Builds a style/theme raster this world skipped (the quick first-pass
+     * world builds terrain only), time-sliced; resolves when it is ready.
+     */
+    const pendingRasters = new Map()
+    world.ensureRaster = (style, theme) => {
+      const key = `${style}:${theme}`
+      if (!world.ready || !RAMPS[style] || world.rasters.has(key)) return Promise.resolve()
+      if (!pendingRasters.has(key)) pendingRasters.set(key, runSliced(buildRaster(style, theme)))
+      return pendingRasters.get(key)
+    }
 
     /**
      * High-resolution raster of a world rectangle (for zoomed-in detail).
@@ -646,7 +673,7 @@
           buildTowns()
           buildMsa()
           world.progress = 0.75
-          for (const style of options.styles ?? ['terrain', 'geo']) {
+          for (const style of options.styles ?? ['terrain', 'technology', 'geo']) {
             for (const theme of options.themeOrder ?? ['dark', 'light']) yield* buildRaster(style, theme)
           }
           world.progress = 1
