@@ -14,7 +14,7 @@
  */
 (() => {
   const KEY = 'karl.disclaimer'
-  const VERSION = '1'
+  const VERSION = '2' // bumped: every visitor sees the disclaimer again (once)
 
   const TITLE = 'Portfolio Demonstration Disclaimer'
   const PARAGRAPHS = [
