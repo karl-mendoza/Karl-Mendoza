@@ -1102,8 +1102,18 @@
         c.globalCompositeOperation = 'source-over'
       }
       // Keep the transparent primary nav that overlays the hero clear of traffic.
-      const nav = document.querySelector('nav[aria-label="Primary"]')?.getBoundingClientRect()
-      const navBottom = nav ? clamp(nav.bottom - heroRect.top, 0, H) : 0
+      // Measured as at the top of the page (page coordinates), so a re-measure
+      // while scrolled down — the sticky nav stays on screen while the hero has
+      // scrolled away — never stretches this band over the whole map.
+      const navEl = document.querySelector('nav[aria-label="Primary"]')
+      const nav = navEl?.getBoundingClientRect()
+      let pinned = false
+      for (let el = navEl; el && el !== document.body; el = el.parentElement) {
+        const position = getComputedStyle(el).position
+        if (position === 'fixed' || position === 'sticky') pinned = true
+      }
+      const navBottomAtTop = nav ? (pinned ? nav.bottom : nav.bottom + window.scrollY) : 0
+      const navBottom = nav ? clamp(navBottomAtTop - (heroRect.top + window.scrollY), 0, H) : 0
       if (navBottom > 0) {
         const g = c.createLinearGradient(0, 0, 0, navBottom + 36)
         g.addColorStop(0, 'rgba(0,0,0,.88)')
