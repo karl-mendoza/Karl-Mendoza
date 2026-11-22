@@ -147,17 +147,11 @@
         land: [[0, 214, 234, 212], [800, 224, 236, 204], [2500, 234, 228, 192], [5000, 222, 204, 170], [8000, 206, 188, 166], [11000, 238, 234, 228]],
       },
     },
-    // Technology: the terrain relief (same elevation steps and hillshade) in a
-    // blue / violet digital palette. The terrain ramp above is unchanged.
-    technology: {
-      dark: {
-        water: [[0, 8, 16, 46], [600, 6, 12, 38], [3000, 4, 8, 28]],
-        land: [[0, 10, 34, 58], [800, 12, 42, 70], [2500, 20, 54, 92], [5000, 34, 64, 116], [8000, 56, 76, 140], [11000, 96, 116, 180]],
-      },
-      light: {
-        water: [[0, 212, 224, 246], [600, 196, 210, 240], [3000, 176, 192, 232]],
-        land: [[0, 226, 238, 246], [800, 216, 230, 244], [2500, 204, 218, 240], [5000, 194, 202, 236], [8000, 184, 188, 228], [11000, 234, 234, 248]],
-      },
+    // Technology: the terrain relief (same elevation steps and hillshade) with
+    // the terrain's greenish background colours; only its line work, labels and
+    // chip mark use the technology palette (pal.tech in asd-scope.js).
+    get technology() {
+      return this.terrain
     },
     geo: {
       dark: {

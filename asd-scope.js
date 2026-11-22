@@ -13,7 +13,7 @@
  * Display styles (ATM/ATC backgrounds), cross-faded when switched:
  *   radar (standard scope) · sectors (airspace volumes, frequencies, limits) ·
  *   terrain (relief, contours, spot heights, MSA) · technology (the terrain
- *   picture and effects in a blue / violet palette) · geo (land/sea, rivers,
+ *   picture, background colours and effects; blue / violet line work) · geo (land/sea, rivers,
  *   towns, roads) · declutter (map faded so traffic stands out).
  * Overlays ("map details"): airways & fixes, airspace, range rings, weather,
  * track labels. Geography comes from public/asd-world.js (generated in time
