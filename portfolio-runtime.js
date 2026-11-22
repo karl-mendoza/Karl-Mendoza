@@ -62,7 +62,7 @@
     group.className = 'km-nav-group'
 
     const link = document.createElement('a')
-    link.className = 'asd-static-login relative whitespace-nowrap py-1 transition hover:text-foreground'
+    link.className = 'asd-static-uiux relative whitespace-nowrap py-1 transition hover:text-foreground'
     link.href = appLink('/ui-ux')
     const number = document.createElement('span')
     number.className = 'mr-1.5 text-ok'
@@ -268,7 +268,7 @@
     const list = nav?.querySelector('ul')
     if (!list) return false
 
-    if (!list.querySelector('.asd-static-login')) list.append(createUiuxNavItem())
+    if (!list.querySelector('.asd-static-uiux')) list.append(createUiuxNavItem())
 
     // Header tools (DAY / NIGHT switch): a group that is a direct child
     // of the nav placed in the top-right grid cell by CSS (beside the UTC
