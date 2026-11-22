@@ -242,7 +242,7 @@
       styles: scope.styles,
       value: scope.style,
       primary: 'radar',
-      alternate: 'terrain',
+      alternate: 'technology',
       onChange: id => scope.setStyle(id),
       details: scope.details,
       onDetailChange: (id, on) => scope.setLayer(id, on),
@@ -323,7 +323,7 @@
       name,
       document.createTextNode(', an '),
       emphasis,
-      document.createTextNode(". Across 25 years — five in aviation and aerospace engineering, twenty in web, mobile and app development — I've focused on making complex, safety-critical ATM and ATC systems human-factors engineered."),
+      document.createTextNode(". Across 30 years — five in aviation and aerospace engineering, twenty in web, mobile and app development — I've focused on making complex, safety-critical ATM and ATC systems human-factors engineered."),
     )
   }
 

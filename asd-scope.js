@@ -21,7 +21,8 @@
  *
  * Exposes window.KMAsdScope.mount(heroElement) → { layer, canvas, styles,
  * style, setStyle(id), details, setLayer(id, on), onPreviews(fn), stats(),
- * attachViewport(KMMapViewport) }. With a viewport attached the picture
+ * setTechnologies(list), attachViewport(KMMapViewport) }. Technology strips
+ * set to ACTIVE (Technology Bays) fly as traffic on the Technology style. With a viewport attached the picture
  * pans/zooms with its camera; screen-space aids (legibility mask, data
  * blocks, symbols) keep a constant size like a real ASD.
  */
@@ -187,8 +188,8 @@
           sector: 'rgba(118, 80, 0, .34)', sectorLabel: 'rgba(118, 80, 0, .78)',
           tma: 'rgba(0, 98, 123, .3)', coast: 'rgba(53, 85, 106, .26)',
           restrict: [156, 22, 36], runway: 'rgba(23, 42, 53, .85)', centerline: 'rgba(23, 42, 53, .34)',
-          assumed: '#096b4a', other: 'rgba(53, 85, 106, .78)', pending: '#835000', conflict: '#9c1624',
-          vfr: 'rgba(53, 85, 106, .62)', text: 'rgba(23, 42, 53, .92)', textDim: 'rgba(53, 85, 106, .8)',
+          assumed: '#096b4a', other: 'rgba(43, 70, 88, .92)', pending: '#835000', conflict: '#9c1624',
+          vfr: 'rgba(53, 85, 106, .62)', text: 'rgba(23, 42, 53, .92)', textDim: 'rgba(43, 70, 88, .94)',
           select: '#005d75', sweep: [0, 107, 74], sweepPeak: .14, wxLight: [0, 98, 123], wxHeavy: [0, 98, 123], wxAlpha: .055,
           coastline: 'rgba(0, 82, 120, .62)', contour: 'rgba(110, 86, 50, .2)', contourIndex: 'rgba(110, 86, 50, .42)', depth: 'rgba(0, 98, 140, .18)',
           river: 'rgba(24, 112, 182, .62)', road: 'rgba(150, 108, 40, .45)', motorway: 'rgba(196, 120, 24, .7)', motorwayCasing: 'rgba(255, 255, 255, .8)',
@@ -208,7 +209,7 @@
           sector: 'rgba(223, 169, 54, .3)', sectorLabel: 'rgba(223, 169, 54, .62)',
           tma: 'rgba(71, 201, 213, .22)', coast: 'rgba(120, 160, 180, .2)',
           restrict: [255, 102, 117], runway: 'rgba(220, 234, 243, .75)', centerline: 'rgba(220, 234, 243, .26)',
-          assumed: '#43efbd', other: 'rgba(159, 183, 204, .72)', pending: '#e8b23a', conflict: '#ff5a69',
+          assumed: '#43efbd', other: 'rgba(159, 183, 204, .82)', pending: '#e8b23a', conflict: '#ff5a69',
           vfr: 'rgba(159, 183, 204, .55)', text: 'rgba(220, 234, 243, .9)', textDim: 'rgba(159, 183, 204, .78)',
           select: '#e9f6ff', sweep: [70, 240, 168], sweepPeak: .11, wxLight: [64, 140, 200], wxHeavy: [232, 178, 58], wxAlpha: .11,
           coastline: 'rgba(132, 192, 220, .58)', contour: 'rgba(170, 190, 150, .14)', contourIndex: 'rgba(196, 206, 160, .3)', depth: 'rgba(90, 150, 210, .14)',
@@ -259,7 +260,7 @@
     let staticDrawQueued = false
     // Map details on load: all overlays on (incl. airways & fixes and weather).
     const layers = { airways: true, airspace: true, rings: true, weather: true, labels: true }
-    let style = 'terrain' // default hero background style
+    let style = 'technology' // default hero background style (on page load)
     let fade = null // { from, start, key } while cross-fading between styles
     let scaleBottom = 0 // y of the scale bar (inside the first screen)
     let copyRect = null // hero copy column (hero px), kept clear of map labels
@@ -278,7 +279,7 @@
 
     // Generated geography (shared by all styles), refined detail raster and previews.
     // Two passes of the same seeded world: a quick low-resolution one so the
-    // default Terrain view is complete from the first visible frame, then the
+    // default Technology view is complete from the first visible frame, then the
     // full-resolution one, cross-faded in when ready.
     const worldOptions = {
       coast: COAST,
@@ -289,7 +290,7 @@
       ...worldOptions,
       res: 1,
       skipRivers: true,
-      styles: ['terrain'], // both themes: an early theme toggle never shows a gap
+      styles: ['technology'], // both themes: an early theme toggle never shows a gap
     })
     let world = firstWorld
     let worldReadyAt = 0
@@ -1190,6 +1191,98 @@
       return t
     }
 
+    /* ------------------------------------------------- technology traffic -- */
+    // Technology strips set to ACTIVE on the homepage's Technology Bays
+    // (src/techbays) fly as overflights on the Technology style: same symbols,
+    // trails, vectors, hand-in, STCA, selection and data-block layout as the
+    // other traffic, with a data block of CALLSIGN · NAME · ADOPTED · LEVEL ·
+    // SQUAWK. They arrive with the "km:active-technologies" event (and
+    // window.KMActiveTechnologies for whichever side loads first).
+    let techList = [] // [{ id, callsign, name, from, lvl, squawk, gs }]
+    const techVisible = () => style === 'technology'
+    const shown = t => !t.tech || techVisible()
+    // On the Technology style only ACTIVE technology tracks carry a data block
+    // (and can be the selected track); the usual traffic keeps its symbol,
+    // trail and vector without a block. Other styles: every track has one.
+    const hasBlock = t => !techVisible() || Boolean(t.tech)
+    let drawnBlocks = [] // callsigns whose data block the last frame drew (diagnostics)
+
+    // Callsign colour of a technology data block = its strip's callsign colour on
+    // the Technology Bays: the bay's era tone, read live from the shared palette
+    // variable (--bay-<tone> in techbays.css), so the two always match (themes,
+    // palette changes, a strip moved to another bay). Cached per theme.
+    const toneCache = new Map()
+    function toneColor(t) {
+      if (!t.tone) return ''
+      const key = `${theme}:${t.tone}`
+      if (!toneCache.has(key)) toneCache.set(key, getComputedStyle(document.documentElement).getPropertyValue(`--bay-${t.tone}`).trim())
+      return toneCache.get(key)
+    }
+
+    /** Copies a technology's record onto its track; on later updates the level is a new cleared level. */
+    function applyTech(t, tech, initial) {
+      t.tech = tech.id
+      t.cs = String(tech.callsign)
+      t.name = String(tech.name ?? '')
+      t.from = String(tech.from ?? '')
+      t.squawk = String(tech.squawk ?? '')
+      t.tone = /^[a-z]+$/.test(tech.tone ?? '') ? tech.tone : ''
+      t.cfl = Math.max(10, Number(tech.lvl) || 300) * 100
+      t.cruiseGs = clamp(Number(tech.gs) || 420, 250, 520)
+      if (initial) {
+        t.alt = t.cfl
+        t.gs = t.cruiseGs
+      }
+    }
+
+    /**
+     * A track for one technology on an overflight route, flown forward until it
+     * is on screen (`depth` NM inside the view, or its deepest point).
+     */
+    function spawnTech(tech, depth) {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const t = spawn('over')
+        if (!t) continue
+        callsigns.delete(t.cs)
+        applyTech(t, tech, true)
+        t.willAssume = true
+        let deepest = -Infinity
+        for (let s = 0; s < 8000 && !t.done; s += 2) {
+          const e = edgeDistance(t.x, t.y)
+          if (e >= depth || (e > 2 && e < deepest - 0.5)) break
+          deepest = Math.max(deepest, e)
+          updateTrack(t, 2)
+        }
+        if (!t.done && edgeDistance(t.x, t.y) > 2) return t
+        tracks = tracks.filter(other => other !== t)
+      }
+      return null
+    }
+
+    /** Every active technology has a track (new ones, and ones whose route ended). */
+    function ensureTechTracks(depth) {
+      if (!techList.length) return
+      const present = new Set(tracks.filter(t => t.tech && !t.done).map(t => t.tech))
+      for (const tech of techList) if (!present.has(tech.id)) spawnTech(tech, depth())
+    }
+
+    /** The active technologies (from the Technology Bays); tracks follow at once. */
+    function setTechnologies(list) {
+      techList = (Array.isArray(list) ? list : []).filter(tech => tech && tech.id && tech.callsign)
+      const byId = new Map(techList.map(tech => [tech.id, tech]))
+      for (const t of tracks) {
+        if (!t.tech) continue
+        const tech = byId.get(t.tech)
+        if (tech) applyTech(t, tech, false)
+        else t.done = true
+      }
+      tracks = tracks.filter(t => !t.done)
+      if (selected?.done || (selected?.tech && !byId.has(selected.tech))) selected = null
+      ensureTechTracks(() => rand(14, 40))
+      detectConflicts()
+      if (!shouldRun()) draw(performance.now())
+    }
+
     function spawnVfr() {
       const x = rand(view.x0 + 8, view.x1 - 8)
       const y = rand(view.y0 + 8, view.y1 - 8)
@@ -1290,7 +1383,7 @@
 
     function detectConflicts() {
       for (const t of tracks) t.conflict = false
-      const list = tracks.filter(t => t.kind !== 'vfr' && !t.done && edgeDistance(t.x, t.y) > -4)
+      const list = tracks.filter(t => t.kind !== 'vfr' && !t.done && shown(t) && edgeDistance(t.x, t.y) > -4)
       for (let i = 0; i < list.length; i++) {
         for (let j = i + 1; j < list.length; j++) {
           const a = list[i]
@@ -1320,8 +1413,11 @@
       for (const t of tracks) if (t.done && t.cs) callsigns.delete(t.cs)
       if (selected?.done) selected = null
       tracks = tracks.filter(t => !t.done)
+      // An active technology whose route ended comes back on a new one, entering the view.
+      ensureTechTracks(() => 3)
 
-      const ifr = tracks.filter(t => t.kind !== 'vfr').length
+      // Technology tracks are extra: the usual traffic count is unchanged.
+      const ifr = tracks.filter(t => t.kind !== 'vfr' && !t.tech).length
       spawnTimer -= simDt / TIME_SCALE
       if (ifr < targetCount() && spawnTimer <= 0) {
         spawn()
@@ -1350,6 +1446,7 @@
         for (let s = 0; s < target && !t.done; s += 2) updateTrack(t, 2)
       }
       tracks = tracks.filter(t => !t.done)
+      ensureTechTracks(() => rand(14, 40))
       for (let i = 0; i < (W < 720 ? 1 : 2); i++) spawnVfr()
 
       weather = Array.from({ length: W < 720 ? 6 : 12 }, () => {
@@ -1458,7 +1555,7 @@
       ctx.setLineDash([4, 4])
       ctx.lineWidth = 1
       for (const t of tracks) {
-        if (!t.conflict || t.conflict.cs < t.cs) continue
+        if (!t.conflict || t.conflict.cs < t.cs || !shown(t) || !shown(t.conflict)) continue
         ctx.strokeStyle = pal.conflict
         ctx.globalAlpha = TA * (blinkOn ? 0.85 : 0.4)
         ctx.beginPath()
@@ -1469,13 +1566,15 @@
       ctx.globalAlpha = TA * (1)
       ctx.setLineDash([])
 
-      if (selected && !selected.done) drawSelectedRoute(selected)
+      if (selected && !selected.done && shown(selected) && hasBlock(selected)) drawSelectedRoute(selected)
 
       // Label de-confliction: each block takes the first free quadrant.
       const placed = []
+      drawnBlocks = []
       const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
 
       for (const t of tracks) {
+        if (!shown(t)) continue // technology tracks: Technology style only
         const px = toX(t.x)
         const py = toY(t.y)
         if (px < -80 || px > W + 80 || py < -80 || py > H + 80) continue
@@ -1528,7 +1627,7 @@
           ctx.arc(px, py, 3.6, 0, TAU)
           ctx.stroke()
         }
-        if (t === selected) {
+        if (t === selected && hasBlock(t)) {
           ctx.strokeStyle = pal.select
           ctx.lineWidth = 1
           ctx.beginPath()
@@ -1537,7 +1636,7 @@
         }
 
         // Data block
-        if (!layers.labels) continue
+        if (!layers.labels || !hasBlock(t)) continue
         let lines
         if (t.kind === 'vfr') {
           lines = [[t.squawk, pal.textDim], [`A${String(Math.round(t.alt / 100)).padStart(3, '0')}`, pal.textDim]]
@@ -1548,8 +1647,14 @@
           if (t.conflict) head += blinkOn ? ' STCA' : ''
           else if (t.handoff) head += blinkOn ? ` ▸${t.handoff}` : ''
           else if (t.state === 'pending') head += ` ◂${t.kind === 'dep' ? 'TWR' : 'IN'}`
-          lines = [[head, color], [levels, pal.text]]
-          if (t.state !== 'other' || t === selected) lines.push([`${String(Math.round(t.gs / 10)).padStart(2, '0')} ${t.type}`, pal.textDim])
+          if (t.tech) {
+            // Technology data block: CALLSIGN · NAME · ADOPTED · LEVEL · SQUAWK (Mode A).
+            const name = t.name.length > 18 ? `${t.name.slice(0, 17)}…` : t.name
+            lines = [[head, toneColor(t) || color], [name, pal.text], [`ADPT ${t.from}`, pal.textDim], [`${levels.trimEnd()} A${t.squawk}`, pal.text]]
+          } else {
+            lines = [[head, color], [levels, pal.text]]
+          }
+          if (!t.tech && (t.state !== 'other' || t === selected)) lines.push([`${String(Math.round(t.gs / 10)).padStart(2, '0')} ${t.type}`, pal.textDim])
           if (t === selected) {
             const next = t.names.slice(t.wi).find(n => n !== 'HOLD' && POINTS[n] && FIXES[n]) || t.names[t.names.length - 1]
             lines.push([`→ ${next}`, pal.select])
@@ -1570,6 +1675,7 @@
         }
         const choice = options.map(boxFor).find(box => !placed.some(other => overlaps(box, other))) || boxFor(options[0])
         placed.push(choice)
+        drawnBlocks.push(t.cs || t.squawk)
         const side = choice.sd
         const down = choice.dn
         const lx = choice.bx
@@ -1584,6 +1690,10 @@
         ctx.globalAlpha = TA * (1)
         const tx = side > 0 ? lx + 3 : lx - 3 - blockW
         const ty = down ? ly - 2 : ly - blockH + 2
+        // Label plate in the hero background colour: keeps the block AA-legible
+        // (WCAG 2.2: ≥ 4.5:1) wherever it lands on the map, relief and weather.
+        ctx.fillStyle = theme === 'light' ? 'rgba(234, 241, 244, .86)' : 'rgba(6, 27, 44, .86)'
+        ctx.fillRect(tx - 3, ty - 2, blockW + 6, blockH + 1)
         lines.forEach(([text, fill], i) => {
           ctx.font = `${i === 0 ? 700 : 500} ${fs}px ${FONT}`
           ctx.fillStyle = fill
@@ -1744,7 +1854,7 @@
 
       nextSelect -= dt
       if (nextSelect <= 0) {
-        const candidates = tracks.filter(t => t.state === 'assumed' && !t.conflict && edgeDistance(t.x, t.y) > 15)
+        const candidates = tracks.filter(t => t.state === 'assumed' && !t.conflict && shown(t) && hasBlock(t) && edgeDistance(t.x, t.y) > 15)
         selected = candidates.length ? pick(candidates) : null
         nextSelect = rand(10, 16)
       }
@@ -1774,6 +1884,7 @@
     function applyTheme() {
       theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
       pal = palette(theme === 'light')
+      toneCache.clear() // bay palette values differ per theme
       mapKey = ''
       fade = null
       refined = null
@@ -1806,6 +1917,9 @@
     pal = palette(theme === 'light')
     measure()
     populate()
+    // Active technology strips (Technology Bays): now, and whenever they change.
+    setTechnologies(window.KMActiveTechnologies)
+    window.addEventListener('km:active-technologies', event => setTechnologies(event.detail))
     applyGrid()
     refresh()
     buildPreviews()
@@ -1907,6 +2021,19 @@
       resetAdjustments() {
         for (const a of ADJUSTMENTS) setAdjustment(a.id, a.value)
         return ADJUSTMENTS.map(a => ({ ...a }))
+      },
+      /** Active technologies as traffic (normally fed by the "km:active-technologies" event). */
+      setTechnologies,
+      /** Callsigns whose data block the last frame drew (diagnostics and tests). */
+      get dataBlocks() {
+        return [...drawnBlocks]
+      },
+      /** Read-only snapshot of the technology tracks (diagnostics and tests). */
+      technologyTracks() {
+        syncCamera()
+        return tracks
+          .filter(t => t.tech)
+          .map(t => ({ id: t.tech, callsign: t.cs, callsignColor: toneColor(t), name: t.name, from: t.from, squawk: t.squawk, alt: Math.round(t.alt), cfl: t.cfl, state: t.state, visible: shown(t), x: Math.round(toX(t.x)), y: Math.round(toY(t.y)) }))
       },
       /** Overlays ("map details"), independent toggles. */
       get details() {
