@@ -3,7 +3,9 @@
  *
  *   [ tile ]  ← quick toggle: shows the style you'd switch to (primary ⇄ last alternate)
  *   hover / focus / tap reveals a panel: one option per style (rendered preview +
- *   label, selected = accent border + label), then
+ *   label, selected = accent border + label), an optional view toggle (3D) styled
+ *   like the styles (pressed = accent border + label; while on, no style is pressed
+ *   and choosing a style or the tile turns it off), then
  *     "Adjust" → "Display" popover: continuous sliders (live, smooth) + Reset
  *     "More"   → "Map details" popover: overlay toggles.
  *
@@ -13,7 +15,8 @@
  *   details: [{ id, label, icon, pressed }], onDetailChange(id, on),
  *   adjustments: [{ id, label, hint, min, max, step, value, unit }], onAdjust(id, value),
  *   onResetAdjustments() → adjustments,
- * }) → { setPreviews({ id: url }), setValue(id), destroy() }
+ *   toggle: { label, offLabel, description, pressed, onChange(on) },  // optional (the 3D view)
+ * }) → { setPreviews({ id: url }), setValue(id), setToggle(on), destroy() }
  */
 (() => {
   'use strict'
@@ -25,6 +28,12 @@
     adjust: svg('<path d="M4 7h9M17 7h3M4 17h3M11 17h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/>'),
     close: svg('<path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'),
   }
+  // View toggle artwork (theme-independent, like the map detail icons): a
+  // perspective ground grid with an aircraft, its drop line and shadow.
+  const VIEW_3D_ART = '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" fill="#0b2a3d"/>'
+    + '<g fill="none" stroke="#47c9d5" stroke-width=".9" opacity=".6"><path d="M1 47 17 27h14l16 20"/><path d="M24 27v20M12 47l7-20M36 47l-7-20M13 32h22M8 38h32M4 43h40"/></g>'
+    + '<path d="M28 16v16" stroke="#8de8d2" stroke-width="1" stroke-dasharray="1.6 1.6"/><ellipse cx="28" cy="33" rx="3" ry="1.1" fill="#43efbd" opacity=".55"/>'
+    + '<path d="M28 7l6.5 8-6.5-2.4-6.5 2.4Z" fill="#43efbd"/></svg>'
 
   function el(tag, className, attrs = {}) {
     const node = document.createElement(tag)
@@ -40,8 +49,11 @@
       styles, onChange = () => {}, primary = styles[0].id,
       details = [], onDetailChange = () => {},
       adjustments = [], onAdjust = () => {}, onResetAdjustments = null,
+      toggle = null,
     } = options
     let value = options.value ?? primary
+    let toggled = Boolean(toggle?.pressed)
+    let toggleButton = null
     let alternate = options.alternate ?? styles.find(s => s.id !== primary)?.id
     let previews = {}
     const id = `asd-layers-${++uid}`
@@ -104,6 +116,21 @@
         popovers.get(name)?.trigger.focus()
       })
       return sheet
+    }
+
+    // View toggle (3D), right after the styles and styled like them.
+    if (toggle) {
+      toggleButton = el('button', 'asd-layers-option asd-layers-toggle', {
+        type: 'button', 'aria-pressed': 'false', title: toggle.description || toggle.label,
+        'aria-label': `${toggle.label} view${toggle.description ? `: ${toggle.description}` : ''}`,
+      })
+      const thumb = el('span', 'asd-layers-thumb asd-layers-thumb--art')
+      thumb.innerHTML = VIEW_3D_ART
+      const name = el('span', 'asd-layers-name')
+      name.textContent = toggle.label
+      toggleButton.append(thumb, name)
+      on(toggleButton, 'click', () => setToggled(!toggled, true))
+      panel.append(toggleButton)
     }
 
     if (adjustments.length || details.length) panel.append(el('span', 'asd-layers-divider', { 'aria-hidden': 'true' }))
@@ -190,15 +217,26 @@
 
     /* --------------------------------------------------------- state ------ */
     function render() {
-      const target = value === primary ? alternate : primary
-      tileLabel.textContent = labelOf(target)
-      tile.setAttribute('aria-label', coarse.matches ? `Map styles (current: ${labelOf(value)})` : `Switch map style to ${labelOf(target)}`)
+      // While the toggle (3D) is on, the tile offers the way back: the 2D style in use.
+      const target = toggled ? value : value === primary ? alternate : primary
+      tileLabel.textContent = toggled && toggle.offLabel ? toggle.offLabel : labelOf(target)
+      const current = toggled ? toggle.label : labelOf(value)
+      tile.setAttribute('aria-label', coarse.matches ? `Map styles (current: ${current})` : toggled ? `Back to the 2D map (${labelOf(target)})` : `Switch map style to ${labelOf(target)}`)
       tile.dataset.target = target
       setImg(tileImg, previews[target])
       for (const [styleId, b] of optionButtons) {
-        b.setAttribute('aria-pressed', String(styleId === value))
+        b.setAttribute('aria-pressed', String(!toggled && styleId === value))
         setImg(b.querySelector('img'), previews[styleId])
       }
+      toggleButton?.setAttribute('aria-pressed', String(toggled))
+    }
+
+    /** Turns the view toggle on or off; `notify` reports it (user actions). */
+    function setToggled(next, notify) {
+      if (!toggle || toggled === Boolean(next)) return
+      toggled = Boolean(next)
+      render()
+      if (notify) toggle.onChange?.(toggled)
     }
 
     function setImg(img, src) {
@@ -207,10 +245,14 @@
     }
 
     function select(styleId) {
-      if (styleId === value) return
-      value = styleId
-      if (styleId !== primary) alternate = styleId
-      onChange(styleId)
+      // A style (or the tile) also leaves the toggled view (3D): the style first,
+      // so the 2D map comes back already showing it.
+      if (styleId !== value) {
+        value = styleId
+        if (styleId !== primary) alternate = styleId
+        onChange(styleId)
+      }
+      if (toggled) setToggled(false, true)
       render()
     }
 
@@ -296,6 +338,10 @@
         value = styleId
         if (styleId !== primary) alternate = styleId
         render()
+      },
+      /** Shows the view toggle (3D) on or off without reporting it. */
+      setToggle(on) {
+        setToggled(on, false)
       },
       destroy() {
         for (const off of cleanup) off()

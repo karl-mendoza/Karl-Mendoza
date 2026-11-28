@@ -23,6 +23,9 @@
  *   - Keyboard (on `keyboardTarget`): + / − zoom, arrows pan (Shift = faster),
  *     0 or Home resets.
  *
+ * `enabled = false` ignores all input (e.g. while another view of the map,
+ * such as the hero's 3D view, takes it); the camera keeps its state.
+ *
  * Events: `change` (detail = transform), `hint` (detail = { type: 'wheel' }).
  * Exposes window.KMMapViewport.
  */
@@ -83,6 +86,7 @@
       this.motion = null
       this.raf = 0
       this.lastTap = null
+      this.enabled = true
       this.cleanup = []
       this.tick = this.tick.bind(this)
       this.bind()
@@ -323,6 +327,7 @@
     }
 
     onWheel(e) {
+      if (!this.enabled) return
       const modifier = e.ctrlKey || e.metaKey
       if (this.options.wheelNeedsModifier && !modifier) {
         if (this.engaged) this.dispatchEvent(new CustomEvent('hint', { detail: { type: 'wheel' } }))
@@ -380,6 +385,7 @@
     }
 
     onPointerDown(e) {
+      if (!this.enabled) return
       this.lastPointerType = e.pointerType
       if (e.pointerType === 'mouse' && e.button !== 0) return
       const first = this.pointers.size === 0
@@ -514,6 +520,7 @@
     }
 
     onDoubleClick(e) {
+      if (!this.enabled) return
       // Touch double-taps are handled in onPointerUp; browsers also fire dblclick.
       if (this.lastPointerType && this.lastPointerType !== 'mouse') return
       if (!this.options.canStartPan(e.target)) return

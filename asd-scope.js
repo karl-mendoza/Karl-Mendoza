@@ -21,8 +21,11 @@
  *
  * Exposes window.KMAsdScope.mount(heroElement) → { layer, canvas, styles,
  * style, setStyle(id), details, setLayer(id, on), onPreviews(fn), stats(),
- * setTechnologies(list), attachViewport(KMMapViewport) }. Technology strips
- * set to ACTIVE (Technology Bays) fly as traffic on the Technology style. With a viewport attached the picture
+ * setTechnologies(list), attachViewport(KMMapViewport), geography, traffic(),
+ * palette, setDrawingPaused(on) }. Technology strips
+ * set to ACTIVE (Technology Bays) fly as traffic on the Technology style. The
+ * read-only geography and traffic() snapshot feed the 3D view (src/asd3d),
+ * which shows the same simulation while the 2D drawing is paused. With a viewport attached the picture
  * pans/zooms with its camera; screen-space aids (legibility mask, data
  * blocks, symbols) keep a constant size like a real ASD.
  */
@@ -258,6 +261,7 @@
     let S = 8
     let mapKey = ''
     let staticDrawQueued = false
+    let drawPaused = false // 3D view open: the simulation keeps running, the 2D picture is not drawn
     // Map details on load: all overlays on (incl. airways & fixes and weather).
     const layers = { airways: true, airspace: true, rings: true, weather: true, labels: true }
     let style = 'technology' // default hero background style (on page load)
@@ -1229,6 +1233,17 @@
       return toneCache.get(key)
     }
 
+    /**
+     * Technology data block text: CALLSIGN · NAME · ADOPTED · LEVEL + SQUAWK
+     * (Mode A). One definition for the 2D blocks and the 3D view's labels.
+     */
+    function techBlock(t, head = t.cs) {
+      const trend = t.vs > 300 ? '↑' : t.vs < -300 ? '↓' : ' '
+      const levels = `${fl(t.alt)}${trend}${Math.abs(t.cfl - t.alt) > 250 ? fl(t.cfl) : ''}`
+      const name = t.name.length > 18 ? `${t.name.slice(0, 17)}…` : t.name
+      return [head, name, `ADPT ${t.from}`, `${levels.trimEnd()} A${t.squawk}`]
+    }
+
     /** Copies a technology's record onto its track; on later updates the level is a new cleared level. */
     function applyTech(t, tech, initial) {
       t.tech = tech.id
@@ -1237,6 +1252,7 @@
       t.from = String(tech.from ?? '')
       t.squawk = String(tech.squawk ?? '')
       t.tone = /^[a-z]+$/.test(tech.tone ?? '') ? tech.tone : ''
+      t.bay = String(tech.bay ?? '')
       t.cfl = Math.max(10, Number(tech.lvl) || 300) * 100
       t.cruiseGs = clamp(Number(tech.gs) || 420, 250, 520)
       if (initial) {
@@ -1373,7 +1389,7 @@
       t.histT += dt
       if (t.histT >= HISTORY_INTERVAL) {
         t.histT = 0
-        t.hist.push([t.x, t.y])
+        t.hist.push([t.x, t.y, t.alt]) // altitude for the 3D view's trails
         if (t.hist.length > HISTORY_DOTS) t.hist.shift()
       }
 
@@ -1659,8 +1675,8 @@
           else if (t.state === 'pending') head += ` ◂${t.kind === 'dep' ? 'TWR' : 'IN'}`
           if (t.tech) {
             // Technology data block: CALLSIGN · NAME · ADOPTED · LEVEL · SQUAWK (Mode A).
-            const name = t.name.length > 18 ? `${t.name.slice(0, 17)}…` : t.name
-            lines = [[head, toneColor(t) || color], [name, pal.text], [`ADPT ${t.from}`, pal.textDim], [`${levels.trimEnd()} A${t.squawk}`, pal.text]]
+            const [cs, name, adopted, level] = techBlock(t, head)
+            lines = [[cs, toneColor(t) || color], [name, pal.text], [adopted, pal.textDim], [level, pal.text]]
           } else {
             lines = [[head, color], [levels, pal.text]]
           }
@@ -1714,6 +1730,7 @@
     }
 
     function draw(now) {
+      if (drawPaused) return
       const cam = syncCamera()
       const camKey = `${cam.k}|${cam.tx}|${cam.ty}`
       // The detail layer is cached and only re-rendered when the camera, style,
@@ -2037,6 +2054,55 @@
       /** Callsigns whose data block the last frame drew (diagnostics and tests). */
       get dataBlocks() {
         return [...drawnBlocks]
+      },
+      /**
+       * Read-only geography in world NM (+x east, +y north, origin = radar head):
+       * fixes, VOR, the KMND runway, airways, coastline and the display/traffic
+       * regions. Copies, for other renderers (the 3D view).
+       */
+      get geography() {
+        const at = p => [p[0], p[1]]
+        return {
+          fixes: Object.entries(FIXES).map(([id, p]) => ({ id, at: at(p) })),
+          vor: { id: VOR.id, freq: VOR.freq, at: at(VOR.at) },
+          airport: { id: AIRPORT.id, runway: { id: '09/27', west: at(AIRPORT.west), east: at(AIRPORT.east) }, final: at(POINTS.FI27), ctr: { center: at(CTR.center), radius: CTR.radius } },
+          airways: AIRWAYS.map(a => ({ id: a.id, points: a.via.map(id => at(POINTS[id])) })),
+          coast: COAST.map(at),
+          ringStep: 10,
+          view: { ...view },
+          sim: { ...sim },
+        }
+      },
+      /**
+       * Live technology traffic in world NM: the same simulated tracks as the 2D
+       * picture (position, heading in rad from north clockwise, altitude ft, ground
+       * speed kt), with the data block text and the bay colour. A new snapshot per call.
+       */
+      traffic() {
+        return tracks
+          .filter(t => t.tech && !t.done)
+          .map(t => ({
+            id: t.tech, callsign: t.cs, name: t.name, from: t.from, squawk: t.squawk, tone: t.tone, bay: t.bay, color: toneColor(t),
+            x: t.x, y: t.y, hdg: t.hdg, alt: t.alt, cfl: t.cfl, gs: t.gs, vs: t.vs || 0, state: t.state,
+            block: techBlock(t), trail: t.hist.map(h => [h[0], h[1], h[2] ?? t.alt]),
+          }))
+      },
+      /** The hero size, the radar head (px) and its scale (px per NM) at zoom 0, for other renderers. */
+      get layout() {
+        return { width: W, height: H, originX: ox, originY: oy, scale }
+      },
+      /** The current ASD colours (DAY or NIGHT), for other renderers. */
+      get palette() {
+        return { ...pal, tech: { ...pal.tech }, theme }
+      },
+      /** Pauses drawing the 2D picture (the simulation keeps running), e.g. while the 3D view shows. */
+      setDrawingPaused(on) {
+        if (drawPaused === Boolean(on)) return
+        drawPaused = Boolean(on)
+        if (drawPaused) return
+        mapKey = ''
+        fade = null
+        if (!shouldRun()) draw(performance.now())
       },
       /** Read-only snapshot of the technology tracks (diagnostics and tests). */
       technologyTracks() {

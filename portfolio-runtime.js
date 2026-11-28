@@ -204,6 +204,9 @@
     return stacked ? y > r.bottom + 24 : x > r.right + 24
   }
 
+  /** The hero opens in the 3D view (over the 2D style); '2d' opens on the 2D map. */
+  const DEFAULT_VIEW = '3d'
+
   function mountHeroMap(hero) {
     const scope = window.KMAsdScope?.mount(hero)
     if (!scope || hero.kmMap || !window.KMMapViewport) return
@@ -249,13 +252,45 @@
       adjustments: scope.adjustments,
       onAdjust: (id, value) => scope.setAdjustment(id, value),
       onResetAdjustments: () => scope.resetAdjustments(),
+      // 3D view (src/asd3d): a mode over the ASD background, not a style.
+      toggle: { label: '3D', offLabel: '2D', description: 'Interactive 3D view of the active technology traffic', onChange: on => setView(on ? '3d' : '2d') },
     })
     if (picker) {
       scope.onPreviews(previews => picker.setPreviews(previews))
       scope.onStyleChange(id => picker.setValue(id))
     }
+
+    // 2D ⇄ 3D. The 3D view (loaded on first use by src/asd3d/main.ts) listens
+    // for "km:asd-view" and, once its scene shows, pauses the 2D drawing; the 2D
+    // scope keeps simulating, so both views show one traffic picture. The 2D map,
+    // its controls, its input and its keyboard focus step aside while 3D shows.
+    let view = '2d'
+    function setView(next, reason = 'user') {
+      next = next === '3d' ? '3d' : '2d'
+      if (next === view) return
+      view = next
+      const on = view === '3d'
+      const wasFocused = on && (layer.contains(document.activeElement) || controls?.element?.contains(document.activeElement))
+      hero.dataset.asdView = view
+      hero.classList.toggle('asd-3d', on)
+      if (!on) scope.setDrawingPaused(false)
+      viewport.enabled = !on
+      layer.inert = on
+      if (controls?.element) controls.element.inert = on
+      picker?.setToggle(on)
+      window.dispatchEvent(new CustomEvent('km:asd-view', { detail: { view, hero, reason } }))
+      if (wasFocused) picker?.element.querySelector('.asd-layers-tile')?.focus()
+    }
+    hero.dataset.asdView = view
     hero.classList.add('asd-map-ready')
-    hero.kmMap = { scope, viewport, controls, picker }
+    hero.kmMap = {
+      scope, viewport, controls, picker, setView,
+      get view() { return view },
+      inMapZone: (x, y) => isInMapZone(hero, x, y),
+    }
+    // Page load: the default view (the 3D entry, src/asd3d/main.ts, also checks
+    // hero.kmMap.view when it loads after this, and falls back to 2D without WebGL).
+    if (DEFAULT_VIEW === '3d') setView('3d', 'default')
   }
 
   function mount() {
